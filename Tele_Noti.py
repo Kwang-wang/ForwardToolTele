@@ -23,6 +23,8 @@ root.geometry("900x600")
 Noti = tk.Text(root,height=1,width=900)
 Noti.configure(font=200)
 Noti.pack(padx=10,pady=0,anchor='e')
+#=======================================================================================
+#=======================================================================================
 #Label
 PhoneNumberLabel = tk.Label(root,text='Phone Number :',font=('Arial',10))
 #entry--------------------------------------------------------------
@@ -37,9 +39,10 @@ GetCodeBtn = tk.Button(text='GetCode',font=('Arial',10),command=lambda: getCode(
 SigninBtn = tk.Button(text='Sign in',font=('Arial',10),command=lambda:signIn())
 #LoggoutBtn
 LoggoutBtn = tk.Button(text='Logout',font=('Arial',10),command=lambda:logOut())
+#=======================================================================================
+#=======================================================================================
 
 
-isAuthorized = client.is_user_authorized()
 #hàm hiển thị UI đăng nhập
 def turnOnLoginUi():
     PhoneNumberLabel.pack(padx=10,pady=0,anchor='w')
@@ -64,6 +67,10 @@ def turnOffBotUi():
 def Notification(text:str):
     Noti.delete("1.0",tk.END)
     Noti.insert(tk.END,text)
+    
+#=======================================================================================
+#=======================================================================================
+isAuthorized = client.is_user_authorized()
 #check xem có đang đăng nhập không
 if isAuthorized == False:
     Notification('You are not logged in')
@@ -71,16 +78,8 @@ if isAuthorized == False:
 else:
     Notification('Logged in')
     turnOnBotUi()
-
-
-
-
-
-
-
-
-
-
+#=======================================================================================
+#=======================================================================================
 
 #addtionalfunction
 #Hàm lấy code sau khi nhập số điện thoại
@@ -97,13 +96,19 @@ def getCode():
             logginFunction.getCode(sdt,client=client)
         except (telethon.errors.rpcerrorlist.SendCodeUnavailableError
                 ,telethon.errors.rpcerrorlist.PhoneNumberInvalidError
-                ,TypeError) as e:
+                ,TypeError
+                ,ConnectionError) as e:
             if isinstance(e,telethon.errors.rpcerrorlist.SendCodeUnavailableError):
                 Notification('You failed to log in too many times, please try again later')
+                return
             if isinstance(e,telethon.errors.rpcerrorlist.PhoneNumberInvalidError):
                 Notification('The phone number is invalid')
+                return
             if isinstance(e,TypeError):
                 Notification('Please enter the correct phone number')
+                return
+            if isinstance(e,ConnectionError):
+                Notification('Cannot send requests while disconnected,Please restart the bot')
         else:
             EntryCodeNumber.pack(padx=10,pady=0,anchor='w')
             SigninBtn.pack(padx=10,pady=0,anchor='w')
@@ -126,6 +131,8 @@ def signIn():
         Notification('Code không khả dụng')
     else:
         Notification('Logged in successfully')
+        global isAuthorized
+        isAuthorized = True
         turnOnBotUi()
         turnOffLoginUi()
 #hàm đăng xuất
@@ -138,6 +145,8 @@ def logOut():
         turnOnLoginUi()
         turnOffBotUi()
         Notification('Logged out successfully')
+        global isAuthorized
+        isAuthorized = False
         
 
 
