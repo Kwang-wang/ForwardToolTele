@@ -6,6 +6,7 @@ import LogginFunction as logginFunction
 import phonenumbers
 from phonenumbers import carrier
 from phonenumbers.phonenumberutil import number_type
+import Service as sv
 #Global variable
 API_ID : Final = '23925763'
 API_HASH : Final = 'fb99e16048c00204847949bb7af987a9'
@@ -18,7 +19,7 @@ client.connect()
 #register GUI
 root = tk.Tk()
 root.title('BloodMoon_forwardBot_1.0.0')
-root.geometry("900x600")
+root.geometry("400x300")
 #TextBox
 Noti = tk.Text(root,height=1,width=900)
 Noti.configure(font=200)
@@ -27,11 +28,16 @@ Noti.pack(padx=10,pady=0,anchor='e')
 #=======================================================================================
 #Label
 PhoneNumberLabel = tk.Label(root,text='Phone Number :',font=('Arial',10))
+CodeNumberLabel = tk.Label(root,text='Code:',font=('Arial',10))
+SelectSourceLabel = tk.Label(root,text='Insert username or id of the source chat:',font=('Arial',10))
 #entry--------------------------------------------------------------
 #EntryPhoneNumber
 EntryPhoneNumber = tk.Entry(root)
 #EntryCodeNumber
 EntryCodeNumber = tk.Entry(root)
+#Entry Source chat
+EntrySourceChat = tk.Entry(root)
+#EntryDestinationchat
 #btn----------------------------------------------------------------
 #GetcodeBTN
 GetCodeBtn = tk.Button(text='GetCode',font=('Arial',10),command=lambda: getCode())
@@ -39,6 +45,9 @@ GetCodeBtn = tk.Button(text='GetCode',font=('Arial',10),command=lambda: getCode(
 SigninBtn = tk.Button(text='Sign in',font=('Arial',10),command=lambda:signIn())
 #LoggoutBtn
 LoggoutBtn = tk.Button(text='Logout',font=('Arial',10),command=lambda:logOut())
+#start forward btn
+StartBtn = tk.Button(text='Start',font=('Arial',10),command=lambda:start())
+
 #=======================================================================================
 #=======================================================================================
 
@@ -52,17 +61,24 @@ def turnOnLoginUi():
 def turnOffLoginUi():
     PhoneNumberLabel.pack_forget()
     EntryPhoneNumber.pack_forget()
+    CodeNumberLabel.pack_forget()
     GetCodeBtn.pack_forget()
     EntryCodeNumber.pack_forget()
     SigninBtn.pack_forget()
     
 #Hàm hiển thị UI bot
 def turnOnBotUi():
-    LoggoutBtn.pack(padx=10,pady=0,anchor='w')
+    LoggoutBtn.pack(padx=10,pady=0,anchor='e')
+    SelectSourceLabel.pack(padx=10,pady= 0,anchor= 'w')
+    EntrySourceChat.pack(padx=10,pady= 0,anchor= 'w')
+    StartBtn.pack(padx=10,pady= 0,anchor= 'w')
     
 #Hàm tắt UI bot
 def turnOffBotUi():
     LoggoutBtn.pack_forget()
+    SelectSourceLabel.pack_forget()
+    EntrySourceChat.pack_forget()
+    StartBtn.pack_forget()
 #Hàm thông báo
 def Notification(text:str):
     Noti.delete("1.0",tk.END)
@@ -110,6 +126,7 @@ def getCode():
             if isinstance(e,ConnectionError):
                 Notification('Cannot send requests while disconnected,Please restart the bot')
         else:
+            CodeNumberLabel.pack(padx=10,pady=0,anchor='w')
             EntryCodeNumber.pack(padx=10,pady=0,anchor='w')
             SigninBtn.pack(padx=10,pady=0,anchor='w')
     
@@ -141,14 +158,42 @@ def logOut():
         logginFunction.logOut(client)
     except:
         Notification('There are some errorr occurr')
+        return
     else:
         turnOnLoginUi()
         turnOffBotUi()
         Notification('Logged out successfully')
         global isAuthorized
         isAuthorized = False
+    
+#Hàm chạy start
+def start():
+    #VALIDATE-----------------------------------------------------------------------
+    chat = EntrySourceChat.get()
+    if (chat == ''):
+        Notification('plz enter the correct username or id')
+        return
+    if chat[1:].isdigit():
+        print('here')
+        chat = int(chat)
         
-
+    try:
+        client.get_entity(-1002094731699)
+    except (telethon.errors.rpcerrorlist.UsernameInvalidError
+            ,ValueError) as e:
+        if isinstance(e,telethon.errors.rpcerrorlist.UsernameInvalidError):
+            Notification('UserName is Invalid, plz enter the correct username or id')
+            print("lỗi ở đây")
+            return 
+        if isinstance(e,ValueError):
+            Notification('Id or Username is not exist,plz enter the correct username or id')
+            return 
+    print('pass')
+    Notification('Running......')
+    #LOGIC--------------------------------------------------------------------------------
+    sv.start(client,chat)
+#=======================================================================================
+#=======================================================================================
 
 #run
 root.mainloop()
